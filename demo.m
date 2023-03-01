@@ -44,4 +44,6 @@ figure;
 imshow(alpha);
 title('Alpha');
 
+
 % Compositing 
+
