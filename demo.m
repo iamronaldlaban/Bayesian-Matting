@@ -83,6 +83,7 @@ title('Laplacian Alpha Matte');
 composite = L_alpha .* im2double(input) + (1 - L_alpha) .* background;
 
 figure;
+
 subplot(2, 2, 1), imshow(input);
 title('Foreground');
 
@@ -127,4 +128,5 @@ title('Laplacian Alpha Matte');
 [bay_grad] = get_Gradient(ground_truth, alpha);
 
 [lap_grad] = get_Gradient(ground_truth, L_alpha);
+
 
