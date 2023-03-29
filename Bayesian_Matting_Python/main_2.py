@@ -62,83 +62,82 @@ def get_window(image, x_center, y_center, window_size):
 
 
 @jit(nopython=True, cache=True)
-def solve(fg_mean, fg_cov, bg_mean, bg_cov, curr_pixel, curr_var, alpha_init, max_iter=50, min_likelihood=1e-6):
+def solve(mu_F, Sigma_F, mu_B, Sigma_B, C, Sigma_C, alpha_init, maxIter = 50, minLike = 1e-6):
     """
-    fg_mean - Mean of foreground pixel
-    fg_cov - Covariance matrix of foreground pixel
-    bg_mean, bg_cov - Mean and covariance of background pixel
-    curr_pixel, curr_var - Current pixel and its variance
-    alpha_init - Starting alpha value
-    max_iter - Iterations to solve the value of the pixel
-    min_likelihood - Minimum likelihood to reach to stop before max_iterations.
+    mu_F - Mean of foreground pixel
+    Sigma_F - Covariance Mat of foreground pixel
+    mu_B, Sigma_B - Mean and Covariance of background pixel
+    C, Sigma_C - Current pixel, and its variance
+    alpha_init - starting alpha value
+    maxIter - Iterations to solve the value of the pixel
+    minLike - min likelihood to reach to stop before maxIterations. 
     """
-    # Initializing matrices
-    I = np.eye(3)
-    best_fg = np.zeros(3)
-    best_bg = np.zeros(3)
-    best_alpha = np.zeros(1)
-    max_likelihood = -np.inf
 
-    inv_sigma2 = 1 / curr_var**2
-    for i in range(fg_mean.shape[0]):
-        # Foreground pixel mean can have multiple possible values, iterating for all.
-        fg_mean_i = fg_mean[i]
-        inv_fg_cov_i = np.linalg.inv(fg_cov[i])
-        for j in range(bg_mean.shape[0]):
-            # Similarly, multiple mean values can be possible for background pixel.
-            bg_mean_j = bg_mean[j]
-            inv_bg_cov_j = np.linalg.inv(bg_cov[j])
+    # Initializing Matrices
+    I = np.eye(3)
+    fg_best = np.zeros(3)
+    bg_best = np.zeros(3)
+    a_best = 0.0
+    maxLike = -np.inf
+    
+    invsgma2 = 1/Sigma_C**2
+    
+    for i in range(mu_F.shape[0]):
+        # Mean of Foreground pixel can have multiple possible values, iterating for all.
+        mu_Fi = mu_F[i]
+        invSigma_Fi = np.linalg.inv(Sigma_F[i])
+
+        for j in range(mu_B.shape[0]):
+            # Similarly, multiple mean values be possible for background pixel.
+            mu_Bj = mu_B[j]
+            invSigma_Bj = np.linalg.inv(Sigma_B[j])
 
             alpha = alpha_init
-            my_iter = 1
-            last_likelihood = -1.7977e+308
-            # Solving minimum likelihood through numerical methods
-            while True:
-                # Making equations for AX = b, where we solve for X.
-                # X here has 3 values for foreground pixel (RGB) and 3 values for background.
-                A = np.zeros((6, 6))
-                A[:3, :3] = inv_fg_cov_i + I * alpha**2 * inv_sigma2
-                A[:3, 3:] = A[3:, :3] = I * alpha * (1 - alpha) * inv_sigma2
-                A[3:, 3:] = inv_bg_cov_j + I * (1 - alpha)**2 * inv_sigma2
+            myiter = 1
+            lastLike = -1.7977e+308
 
-                b = np.zeros((6, 1))
-                b[:3] = np.reshape(inv_fg_cov_i @ fg_mean_i +
-                                   curr_pixel * (alpha) * inv_sigma2, (3, 1))
-                b[3:] = np.reshape(inv_bg_cov_j @ bg_mean_j +
-                                   curr_pixel * (1 - alpha) * inv_sigma2, (3, 1))
-                # Solving for X and storing values for foreground and background pixels
+            # Solving Minimum likelihood through numerical methods
+            while True:
+                # Making Equations for AX = b, where we solve for X.abs
+                # X here has 3 values of forground pixel (RGB) and 3 values for background
+                A = np.zeros((6,6))
+                A[:3,:3] = invSigma_Fi + I*alpha**2 * invsgma2
+                A[:3,3:] = A[3:,:3] = I*alpha*(1-alpha) * invsgma2
+                A[3:,3:] = invSigma_Bj+I*(1-alpha)**2 * invsgma2
+                
+                b = np.zeros((6,1))
+                b[:3] = np.reshape(invSigma_Fi @ mu_Fi + C*(alpha) * invsgma2,(3,1))
+                b[3:] = np.reshape(invSigma_Bj @ mu_Bj + C*(1-alpha) * invsgma2,(3,1))
+
+                # Solving for X and storing values for Forground and Background Pixels 
                 X = np.linalg.solve(A, b)
                 F = np.maximum(0, np.minimum(1, X[0:3]))
                 B = np.maximum(0, np.minimum(1, X[3:6]))
-
+                
                 # Solving for value of alpha once F and B are calculated
-                alpha = np.maximum(0, np.minimum(
-                    1, ((np.atleast_2d(curr_pixel).T - B).T @ (F - B)) / np.sum((F - B)**2)))[0, 0]
-
+                alpha = np.maximum(0, np.minimum(1, ((np.atleast_2d(C).T-B).T @ (F-B))/np.sum((F-B)**2)))[0,0]
+                
                 # Calculating likelihood value for
-                likelihood_C = - \
-                    np.sum((np.atleast_2d(curr_pixel).T - alpha *
-                           F - (1 - alpha) * B)**2) * inv_sigma2
-                likelihood_fg = (- ((F - np.atleast_2d(fg_mean_i).T).T @
-                                 inv_fg_cov_i @ (F - np.atleast_2d(fg_mean_i).T)) / 2)[0, 0]
-                likelihood_bg = (- ((B - np.atleast_2d(bg_mean_j).T).T @
-                                 inv_bg_cov_j @ (B - np.atleast_2d(bg_mean_j).T)) / 2)[0, 0]
-                likelihood = likelihood_C + likelihood_fg + likelihood_bg
-                if likelihood > max_likelihood:
-                    best_alpha = alpha
-                    max_likelihood = likelihood
-                    best_fg = F.ravel()
-                    best_bg = B.ravel()
+                like_C = - np.sum((np.atleast_2d(C).T -alpha*F-(1-alpha)*B)**2) * invsgma2
+                like_fg = (- ((F- np.atleast_2d(mu_Fi).T).T @ invSigma_Fi @ (F-np.atleast_2d(mu_Fi).T))/2)[0,0]
+                like_bg = (- ((B- np.atleast_2d(mu_Bj).T).T @ invSigma_Bj @ (B-np.atleast_2d(mu_Bj).T))/2)[0,0]
+                like = (like_C + like_fg + like_bg)
 
-                if my_iter >= max_iter or abs(likelihood-last_likelihood) <= min_likelihood:
+                if like > maxLike:
+                    a_best = alpha
+                    maxLike = like
+                    fg_best = F.ravel()
+                    bg_best = B.ravel()
+
+                if myiter >= maxIter or abs(like-lastLike) <= minLike:
                     break
 
-                last_likelihood = likelihood
-                my_iter += 1
-    return best_fg, best_bg, best_alpha
+                lastLike = like
+                myiter += 1
+    return fg_best, bg_best, a_best 
 
 
-def Bayesian_Matte(img, trimap, N=25, sig=8, minNeighbours=10):
+def Bayesian_Matte(img, trimap, N=105, sig=8, minNeighbours=10):
     '''
     img - input image that the user will give to perform the foreground-background mapping
     trimap - the alpha mapping that is given with foreground and background determined.
@@ -253,6 +252,21 @@ def Bayesian_Matte(img, trimap, N=25, sig=8, minNeighbours=10):
 
     return a_channel, n_unknown
 
+def image_composite(foreground, background, alpha):
+        
+    alpha = np.array(alpha)
+
+    # Normalize the alpha matte to have values between 0 and 1
+    alpha = alpha.astype(np.float64) / 255.0
+
+    # Create the composite image
+    composite = alpha * foreground + (1 - alpha) * background
+
+    # Display the composite image
+    plt.imshow(composite, cmap='gray')
+    plt.show()
+
+
 
 image = np.array(Image.open('C:/Users/labanr/Desktop/Matting/Bayesian-Matting/Bayesian_Matting_Python/input_training_lowres/GT02.png'))
 image_trimap = np.array(ImageOps.grayscale(Image.open('C:/Users/labanr/Desktop/Matting/Bayesian-Matting/Bayesian_Matting_Python/trimap_training_lowres/Trimap2/GT02.png')))
@@ -262,8 +276,35 @@ alpha, pixel_count = Bayesian_Matte(image, image_trimap)
 
 image_alpha = np.array(ImageOps.grayscale(Image.open('C:/Users/labanr/Desktop/Matting/Bayesian-Matting/Bayesian_Matting_Python/gt_training_lowres/GT02.png')))
 
-show_im(alpha)
+alpha = alpha*255
+plt.imsave("alpha.png", alpha, cmap='gray')
+# plt.imshow(alpha, cmap='gray')
+# plt.show()
 
 print("Absolute Loss with ground truth - ",
       np.sum(np.abs(alpha - image_alpha))/(alpha.shape[0]*alpha.shape[1]))
+
+
+# Load foreground, background, and alpha images
+foreground = cv2.imread('C:/Users/labanr/Desktop/Matting/Bayesian-Matting/Bayesian_Matting_Python/input_training_lowres/GT02.png')
+background = cv2.imread('Trinity.png')
+alpha = cv2.imread('alpha.png')
+
+# Fix 1: Reshape alpha to have the same shape as foreground and background
+alpha = np.broadcast_to(alpha[..., np.newaxis], foreground.shape)
+
+# Fix 2: Convert foreground and background to grayscale
+foreground_gray = cv2.cvtColor(foreground, cv2.COLOR_BGR2GRAY)
+background_gray = cv2.cvtColor(background, cv2.COLOR_BGR2GRAY)
+
+# Blend the images using the alpha mask
+composite_gray = alpha * foreground_gray + (1 - alpha) * background_gray
+
+# Convert the composite image back to color
+composite = cv2.cvtColor(composite_gray, cv2.COLOR_GRAY2BGR)
+
+# Save the composite image
+cv2.imwrite('composite.jpg', composite)
+
+
 
