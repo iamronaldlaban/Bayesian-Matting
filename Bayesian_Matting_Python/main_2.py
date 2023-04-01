@@ -137,7 +137,7 @@ def solve(mu_F, Sigma_F, mu_B, Sigma_B, C, Sigma_C, alpha_init, maxIter = 50, mi
     return fg_best, bg_best, a_best 
 
 
-def Bayesian_Matte(img, trimap, N=105, sig=8, minNeighbours=10):
+def Bayesian_Matte(img, trimap, N=25, sig=8, minNeighbours=10):
     '''
     img - input image that the user will give to perform the foreground-background mapping
     trimap - the alpha mapping that is given with foreground and background determined.
@@ -245,66 +245,76 @@ def Bayesian_Matte(img, trimap, N=105, sig=8, minNeighbours=10):
             # ChangingWindow Size
             # Preparing the gaussian weights for window
             N += 2
-            # sig += 1
+            sig += 1
             gaussian_weights = matlab_style_gauss2d((N, N), sig)
             gaussian_weights /= np.max(gaussian_weights)
             print(N)
 
     return a_channel, n_unknown
 
-def image_composite(foreground, background, alpha):
-        
-    alpha = np.array(alpha)
+def compositing(img, alpha, background): 
 
-    # Normalize the alpha matte to have values between 0 and 1
-    alpha = alpha.astype(np.float64) / 255.0
+    H = alpha.shape[0]
+    W = alpha.shape[1]
 
-    # Create the composite image
-    composite = alpha * foreground + (1 - alpha) * background
+    # Resizing the background image to the size of the alpha channel
+    background = cv2.resize(background, (W, H))
 
-    # Display the composite image
-    plt.imshow(composite, cmap='gray')
-    plt.show()
+    # Converting the images to float
+    img = img / 255
+    alpha = alpha / 255
+    background = background / 255
+
+    # Reshaping the alpha channel to the size of the foreground image
+    alpha = alpha.reshape((H, W, 1))
+    alpha = np.broadcast_to(alpha, (H, W, 3))
+
+    # Compositing the foreground and background images
+    comp = img * (alpha) + background * (1 - alpha)
+
+    return comp
+
+
+# image = cv2.imread('C:/Users/labanr/Desktop/Matting/Bayesian-Matting/Bayesian_Matting_Python/input_training_lowres/GT05.png')
+# image_trimap = cv2.imread('C:/Users/labanr/Desktop/Matting/Bayesian-Matting/Bayesian_Matting_Python/trimap_training_lowres/Trimap2/GT05.png', 0)
+# image_alpha = cv2.imread('C:/Users/labanr/Desktop/Matting/Bayesian-Matting/Bayesian_Matting_Python/gt_training_lowres/GT05.png', 0)
+# background = cv2.imread('C:/Users/labanr/Desktop/Matting/Bayesian-Matting/Bayesian_Matting_Python/background_training_lowres/GT05.png')
 
 
 
-image = np.array(Image.open('C:/Users/labanr/Desktop/Matting/Bayesian-Matting/Bayesian_Matting_Python/input_training_lowres/GT02.png'))
-image_trimap = np.array(ImageOps.grayscale(Image.open('C:/Users/labanr/Desktop/Matting/Bayesian-Matting/Bayesian_Matting_Python/trimap_training_lowres/Trimap2/GT02.png')))
+image = np.array(Image.open('C:/Users/labanr/Desktop/Matting/Bayesian-Matting/Bayesian_Matting_Python/input_training_lowres/GT05.png'))
+image_trimap = np.array(ImageOps.grayscale(Image.open('C:/Users/labanr/Desktop/Matting/Bayesian-Matting/Bayesian_Matting_Python/trimap_training_lowres/Trimap2/GT05.png')))
 
 alpha, pixel_count = Bayesian_Matte(image, image_trimap)
 
 
-image_alpha = np.array(ImageOps.grayscale(Image.open('C:/Users/labanr/Desktop/Matting/Bayesian-Matting/Bayesian_Matting_Python/gt_training_lowres/GT02.png')))
+image_alpha = np.array(ImageOps.grayscale(Image.open('C:/Users/labanr/Desktop/Matting/Bayesian-Matting/Bayesian_Matting_Python/gt_training_lowres/GT05.png')))
+
+#alpha2 = Image.fromarray((alpha * 255).astype(np.uint8))
 
 alpha = alpha*255
-plt.imsave("alpha.png", alpha, cmap='gray')
-# plt.imshow(alpha, cmap='gray')
-# plt.show()
-
-print("Absolute Loss with ground truth - ",
-      np.sum(np.abs(alpha - image_alpha))/(alpha.shape[0]*alpha.shape[1]))
 
 
-# Load foreground, background, and alpha images
-foreground = cv2.imread('C:/Users/labanr/Desktop/Matting/Bayesian-Matting/Bayesian_Matting_Python/input_training_lowres/GT02.png')
-background = cv2.imread('Trinity.png')
-alpha = cv2.imread('alpha.png')
+# # save the alpha matte
+# alpha2.save('alpha.png')
 
-# Fix 1: Reshape alpha to have the same shape as foreground and background
-alpha = np.broadcast_to(alpha[..., np.newaxis], foreground.shape)
+#plt.imsave("alpha.png", alpha, cmap='gray')
+plt.imshow(alpha, cmap='gray')
+plt.show()
 
-# Fix 2: Convert foreground and background to grayscale
-foreground_gray = cv2.cvtColor(foreground, cv2.COLOR_BGR2GRAY)
-background_gray = cv2.cvtColor(background, cv2.COLOR_BGR2GRAY)
+#alpha_matte = np.array(Image.open('C:/Users/labanr/Desktop/Matting/Bayesian-Matting/Bayesian_Matting_Python/alpha.png'))
 
-# Blend the images using the alpha mask
-composite_gray = alpha * foreground_gray + (1 - alpha) * background_gray
+background = cv2.imread('C:/Users/labanr/Desktop/Matting/Bayesian-Matting/Bayesian_Matting_Python/background.jpg')
+background2 = cv2.cvtColor(background, cv2.COLOR_BGR2RGB)
+print(type(alpha))
+print(image.dtype)
+print(type(background2))
+print(background2.dtype)
 
-# Convert the composite image back to color
-composite = cv2.cvtColor(composite_gray, cv2.COLOR_GRAY2BGR)
 
-# Save the composite image
-cv2.imwrite('composite.jpg', composite)
+comp = compositing(image,alpha,background2)
+plt.imshow(comp)
+plt.show()
 
 
 
