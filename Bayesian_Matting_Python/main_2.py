@@ -9,12 +9,22 @@ from Bayesian_matte_KNN import Bayesian_Matte_KNN
 from quality_metrics import quality_metrics
 from timeit import default_timer as timer
 import datetime
+import tkinter as tk
+from tkinter import filedialog
+import unittest
+from matting_functions import matlab_style_gauss2d
 
+
+# root = tk.Tk()
+# root.withdraw() # Hide the main window
+
+# image = filedialog.askopenfilename()
+# image_trimap = filedialog.askopenfilename()
 
 #image = np.array(Image.open('High_Resolution/input_training_highres/GT04.png'))
 #image_trimap = np.array(ImageOps.grayscale(Image.open('High_Resolution/trimap_training_highres/Trimap1/GT04.png')))
-image = np.array(Image.open('input_training_lowres/GT04.png'))
-image_trimap = np.array(ImageOps.grayscale(Image.open('trimap_training_lowres/Trimap1/GT04.png')))
+image = np.array(Image.open('input_training_lowres\GT01.png'))
+image_trimap = np.array(ImageOps.grayscale(Image.open('trimap_training_lowres\Trimap1\GT01.png')))
 
 # Window Size
 N = 105
@@ -31,20 +41,17 @@ alpha_OB = alpha_OB*255
 # cv2.imwrite(write_path, alpha_OB)
 
 # image_alpha = np.array(ImageOps.grayscale(Image.open('High_Resolution/gt_training_highres/GT04.png')))
-image_alpha = np.array(ImageOps.grayscale(Image.open('gt_training_lowres/GT04.png')))
-quality_metrics(alpha_OB, image_alpha)
+ground_truth = np.array(ImageOps.grayscale(Image.open('gt_training_lowres/GT01.png')))
+quality_metrics(alpha_OB, ground_truth)
 print('Time taken: ', datetime.timedelta(seconds = end - start))
-plt.imshow(alpha_OB, cmap='gray')
-plt.show()
-
-
-
+# plt.imshow(alpha_OB, cmap='gray')
+# plt.show()
 background = cv2.imread('C:/Users/labanr/Desktop/Matting/Bayesian-Matting/Bayesian_Matting_Python/background.jpg')
 background2 = cv2.cvtColor(background, cv2.COLOR_BGR2RGB)
 
-comp_OB = compositing(image, alpha_OB, background2)
-plt.imshow(comp_OB)
-plt.show()
+# comp_OB = compositing(image, alpha_OB, background2)
+# plt.imshow(comp_OB)
+# plt.show()
 
 
 # alpha_knn = Bayesian_Matte_KNN(image, image_trimap)
@@ -89,4 +96,42 @@ plt.show()
 
 # # Display the plot
 # plt.show()
+from numpy.testing import assert_allclose
 
+class TestBayesianMatte(unittest.TestCase):
+    def test_image_and_alpha_size(self):
+        print('\nTesting if the image size and alpha size are the same\n')
+        
+        # Load the images
+        try:
+            input_image = image
+            image_alpha = alpha_OB
+        except IOError:
+            self.fail("Failed to load images")
+
+        # Check if the images have the same dimensions
+        try:
+            self.assertEqual(input_image.shape[0:2], image_alpha.shape)
+        except AssertionError:
+            self.fail("Image and alpha have different dimensions")
+        
+        # If everything is proper, assert that the test passes successfully
+        self.assertTrue(True, "The images have the same dimensions")
+
+    def test_window_size_is_odd(self):
+        self.assertNotEqual(N % 2, 0, "N is not odd")
+
+    def test_images(self):
+        # Load example images
+        input_image = image
+        trimap_image = image_trimap
+        ground_truth_image = ground_truth
+        # Check if images are not None
+        assert input_image is not None, "Input image is not loaded"
+        assert trimap_image is not None, "Trimap image is not loaded"
+        assert ground_truth_image is not None, "Ground truth image is not loaded"
+        # Check if images are valid
+        assert input_image.shape[:2] == trimap_image.shape[:2] == ground_truth_image.shape[:2], "Images have different sizes"
+    
+if __name__ == '__main__':
+    unittest.main()

@@ -20,24 +20,33 @@ def matlab_style_gauss2d(shape=(3, 3), sigma=0.5):
         the shape argument, and the values of the array are determined by the Gaussian function with the specified sigma.
         The sum of the values in the array will be approximately equal to 1.
     """
-    m, n = [(ss-1)/2 for ss in shape]
-    x, y = np.meshgrid(np.arange(-n, n+1), np.arange(-m, m+1))
-    h = np.exp(-(x**2 + y**2)/(2*sigma**2))
-    h[h < np.finfo(h.dtype).eps*h.max()] = 0
-    h /= np.sum(h)
-    return h
+    half_height, half_width = [(ss-1)/2 for ss in shape]
+    x_coords, y_coords = np.meshgrid(np.arange(-half_width, half_width+1), np.arange(-half_height, half_height+1))
+    kernel = np.exp(-(x_coords**2 + y_coords**2)/(2*sigma**2))
+    kernel[kernel < np.finfo(kernel.dtype).eps*kernel.max()] = 0
+    kernel /= np.sum(kernel)
+    return kernel
 
-
-def show_im(img):
-    """
-    img - input image should be a numpy array.
-    """
-    plt.imshow(img)
-    plt.show()
 
 
 @jit(nopython=True, cache=True)
 def get_window(image, x_center, y_center, window_size):
+    """
+    Extracts a window of a specified size centered at a given pixel location (x_center, y_center) from an image.
+    If the window goes beyond the boundary of the image, it is padded with zeros.
+
+    Args:
+        image (numpy.ndarray): A three-dimensional NumPy array representing an image, with dimensions 
+                               (height, width, channels).
+        x_center (int): An integer specifying the x-coordinate of the center pixel of the window.
+        y_center (int): An integer specifying the y-coordinate of the center pixel of the window.
+        window_size (int): An integer specifying the size of the window to extract.
+
+    Returns:
+        numpy.ndarray: A three-dimensional NumPy array representing the extracted window, with dimensions 
+                       (window_size, window_size, channels). If the window goes beyond the boundary of 
+                       the image, it is padded with zeros.
+    """
     height, width, channels = image.shape
     half_window_size = window_size // 2
     window = np.zeros((window_size, window_size, channels))
@@ -59,98 +68,105 @@ def get_window(image, x_center, y_center, window_size):
 
 
 @jit(nopython=True, cache=True)
-def solve(mu_F, Sigma_F, mu_B, Sigma_B, C, Sigma_C, alpha_init, maxIter = 50, minLike = 1e-6):
+def solve(mu_F, Sigma_F, mu_B, Sigma_B, C, Sigma_C, alpha_init, max_iterations = 50, min_likelihood = 1e-6):
     """
-    mu_F - Mean of foreground pixel
-    Sigma_F - Covariance Mat of foreground pixel
-    mu_B, Sigma_B - Mean and Covariance of background pixel
-    C, Sigma_C - Current pixel, and its variance
-    alpha_init - starting alpha value
-    maxIter - Iterations to solve the value of the pixel
-    minLike - min likelihood to reach to stop before maxIterations. 
+    Args:
+
+    mu_F: Mean of foreground pixel
+    Sigma_F: Covariance matrix of foreground pixel
+    mu_B: Mean of background pixel
+    Sigma_B: Covariance matrix of background pixel
+    C: Current pixel value
+    Sigma_C: Variance of current pixel value
+    alpha_init: Starting alpha value
+    maxIter: Maximum number of iterations to solve the value of the pixel (default value: 50)
+    minLike: Minimum likelihood to reach to stop before maxIterations (default value: 1e-6)
+    Returns:
+
+    foreground_best: Foreground pixel values
+    bg_best: Background pixel values
+    background_best: Alpha value
     """
 
     # Initializing Matrices
-    I = np.eye(3)
-    fg_best = np.zeros(3)
-    bg_best = np.zeros(3)
-    a_best = 0.0
-    maxLike = -np.inf
-    
-    invsgma2 = 1/Sigma_C**2
-    
+    identity_matrix = np.eye(3)
+    foreground_best = np.zeros(3)
+    background_best = np.zeros(3)
+    alpha_best = 0.0
+    max_likelihood = -np.inf
+
+    inverse_sigma_squared = 1 / Sigma_C ** 2
+
     for i in range(mu_F.shape[0]):
-        # Mean of Foreground pixel can have multiple possible values, iterating for all.
-        mu_Fi = mu_F[i]
-        invSigma_Fi = np.linalg.inv(Sigma_F[i])
+        foreground_mean_i = mu_F[i]
+        inverse_sigma_Fi = np.linalg.inv(Sigma_F[i])
 
         for j in range(mu_B.shape[0]):
-            # Similarly, multiple mean values be possible for background pixel.
-            mu_Bj = mu_B[j]
-            invSigma_Bj = np.linalg.inv(Sigma_B[j])
+            background_mean_j = mu_B[j]
+            inverse_sigma_Bj = np.linalg.inv(Sigma_B[j])
 
             alpha = alpha_init
-            myiter = 1
-            lastLike = -1.7977e+308
+            iteration = 1
+            last_likelihood = -1.7977e+308
 
-            # Solving Minimum likelihood through numerical methods
             while True:
-                # Making Equations for AX = b, where we solve for X.abs
-                # X here has 3 values of forground pixel (RGB) and 3 values for background
+                # Solving AX = b where X is composed of foreground and background pixels
                 A = np.zeros((6,6))
-                A[:3,:3] = invSigma_Fi + I*alpha**2 * invsgma2
-                A[:3,3:] = A[3:,:3] = I*alpha*(1-alpha) * invsgma2
-                A[3:,3:] = invSigma_Bj+I*(1-alpha)**2 * invsgma2
-                
+                A[:3,:3] = inverse_sigma_Fi + identity_matrix * alpha**2 * inverse_sigma_squared
+                A[:3,3:] = A[3:,:3] = identity_matrix * alpha*(1-alpha) * inverse_sigma_squared
+                A[3:,3:] = inverse_sigma_Bj+identity_matrix*(1-alpha)**2 * inverse_sigma_squared
+
                 b = np.zeros((6,1))
-                b[:3] = np.reshape(invSigma_Fi @ mu_Fi + C*(alpha) * invsgma2,(3,1))
-                b[3:] = np.reshape(invSigma_Bj @ mu_Bj + C*(1-alpha) * invsgma2,(3,1))
+                b[:3] = np.reshape(inverse_sigma_Fi @ foreground_mean_i + C*(alpha) * inverse_sigma_squared,(3,1))
+                b[3:] = np.reshape(inverse_sigma_Bj @ background_mean_j + C*(1-alpha) * inverse_sigma_squared,(3,1))
 
-                # Solving for X and storing values for Forground and Background Pixels 
+                # Solving for foreground and background pixels
                 X = np.linalg.solve(A, b)
-                F = np.maximum(0, np.minimum(1, X[0:3]))
-                B = np.maximum(0, np.minimum(1, X[3:6]))
-                
-                # Solving for value of alpha once F and B are calculated
-                alpha = np.maximum(0, np.minimum(1, ((np.atleast_2d(C).T-B).T @ (F-B))/np.sum((F-B)**2)))[0,0]
-                
-                # Calculating likelihood value for
-                like_C = - np.sum((np.atleast_2d(C).T -alpha*F-(1-alpha)*B)**2) * invsgma2
-                like_fg = (- ((F- np.atleast_2d(mu_Fi).T).T @ invSigma_Fi @ (F-np.atleast_2d(mu_Fi).T))/2)[0,0]
-                like_bg = (- ((B- np.atleast_2d(mu_Bj).T).T @ invSigma_Bj @ (B-np.atleast_2d(mu_Bj).T))/2)[0,0]
-                like = (like_C + like_fg + like_bg)
+                foreground_pixels = np.maximum(0, np.minimum(1, X[0:3]))
+                background_pixels = np.maximum(0, np.minimum(1, X[3:6]))
 
-                if like > maxLike:
-                    a_best = alpha
-                    maxLike = like
-                    fg_best = F.ravel()
-                    bg_best = B.ravel()
+                # Solving for alpha
+                alpha = np.maximum(0, np.minimum(1, ((np.atleast_2d(C).T-background_pixels).T @ (foreground_pixels-background_pixels))/np.sum((foreground_pixels-background_pixels)**2)))[0,0]
 
-                if myiter >= maxIter or abs(like-lastLike) <= minLike:
+                # Calculating likelihood
+                likelihood_C = - np.sum((np.atleast_2d(C).T -alpha*foreground_pixels-(1-alpha)*background_pixels)**2) * inverse_sigma_squared
+                likelihood_fg = (- ((foreground_pixels- np.atleast_2d(foreground_mean_i).T).T @ inverse_sigma_Fi @ (foreground_pixels-np.atleast_2d(foreground_mean_i).T))/2)[0,0]
+                likelihood_bg = (- ((background_pixels- np.atleast_2d(background_mean_j).T).T @ inverse_sigma_Bj @ (background_pixels-np.atleast_2d(background_mean_j).T))/2)[0,0]
+                likelihood = (likelihood_C + likelihood_fg + likelihood_bg)
+
+                # Updating variables with the best values
+                if likelihood > max_likelihood:
+                    alpha_best = alpha
+                    max_likelihood = likelihood
+                    foreground_best = foreground_pixels.ravel()
+                    background_best = background_pixels.ravel()
+
+                if iteration >= max_iterations or abs(likelihood-last_likelihood) <= min_likelihood:
                     break
 
-                lastLike = like
-                myiter += 1
-    return fg_best, bg_best, a_best 
+                last_likelihood = likelihood
+                iteration += 1
 
-def compositing(img, alpha, background): 
+    return foreground_best, background_best, alpha_best 
 
-    H = alpha.shape[0]
-    W = alpha.shape[1]
 
-    # Resizing the background image to the size of the alpha channel
-    background = cv2.resize(background, (W, H))
+def compositing(foreground, alpha_channel, background_image): 
+    # Get the dimensions of the alpha channel
+    height, width = alpha_channel.shape[:2]
 
-    # Converting the images to float
-    img = img / 255
-    alpha = alpha / 255
-    background = background / 255
+    # Resize the background image to match the dimensions of the alpha channel
+    background_image = cv2.resize(background_image, (width, height))
 
-    # Reshaping the alpha channel to the size of the foreground image
-    alpha = alpha.reshape((H, W, 1))
-    alpha = np.broadcast_to(alpha, (H, W, 3))
+    # Convert the images to float
+    foreground = foreground / 255.0
+    alpha_channel = alpha_channel / 255.0
+    background_image = background_image / 255.0
 
-    # Compositing the foreground and background images
-    comp = img * (alpha) + background * (1 - alpha)
+    # Reshape the alpha channel to match the dimensions of the foreground image
+    alpha_channel = alpha_channel.reshape((height, width, 1))
+    alpha_channel = np.broadcast_to(alpha_channel, (height, width, 3))
 
-    return comp
+    # Compose the final image by blending the foreground and background based on the alpha channel
+    composite_image = foreground * (alpha_channel) + background_image * (1 - alpha_channel)
+
+    return composite_image
