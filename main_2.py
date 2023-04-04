@@ -357,7 +357,27 @@ class TestBayesianMatte(unittest.TestCase):
         trimap = load_trimap(trimap_path)
         self.assertTrue(check_trimap_values(trimap), "Trimap values are not appropriate. Values should be 0, 255, or between 0 and 255.")
 
-
+    def test_clustFunc(self):
+        print('\n I am testing the clustFunc function \n')
+        
+        # Synthetic dataset with 2 clusters
+        cluster1 = np.random.multivariate_normal([50, 50, 50], np.identity(3) * 100, size=25)
+        cluster2 = np.random.multivariate_normal([200, 200, 200], np.identity(3) * 100, size=25)
+        pixels = np.vstack((cluster1, cluster2))
+        
+        # Assign weights to each pixel (e.g., uniform weights)
+        weights = np.ones(50) * 1/50
+        
+        # Known weighted mean and covariance
+        mean_expected = (np.mean(cluster1, axis=0) + np.mean(cluster2, axis=0)) / 2
+        cov_expected = (np.cov(cluster1.T) + np.cov(cluster2.T)) / 2
+        
+        # Calculate weighted mean and covariance using clustFunc
+        mean_actual, cov_actual = clustFunc(pixels, weights)
+        
+        # Check if mean_actual and cov_actual are close to the expected values
+        np.testing.assert_almost_equal(mean_actual, mean_expected, decimal=4)
+        np.testing.assert_almost_equal(cov_actual, cov_expected, decimal=4)
 
 
 if __name__ == '__main__':
