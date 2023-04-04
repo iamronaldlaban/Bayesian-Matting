@@ -5,8 +5,7 @@ from orchard_bouman_clust import clustFunc
 from matting_functions import solve
 from cluster_KNN import knn_cluster
 
-
-def Bayesian_Matte(img, trimap, N=25, sig=8, minNeighbours=10):
+def Bayesian_Matte(img, trimap, N=105, sig=8, minNeighbours=10):
     '''
     img - input image that the user will give to perform the foreground-background mapping
     trimap - the alpha mapping that is given with foreground and background determined.
@@ -53,7 +52,7 @@ def Bayesian_Matte(img, trimap, N=25, sig=8, minNeighbours=10):
     A, B = np.where(unknown_map == True)
     not_visited = np.vstack((A, B, np.zeros(A.shape))).T
 
-    print("Solving Image with {} unsovled pixels... Please wait...".format(len))
+    print("Solving Image with {} unsolved pixels... Please wait...".format(n_unknown))
 
     # running till all the pixels are solved.
     while(sum(not_visited[:, 2]) != n_unknown):

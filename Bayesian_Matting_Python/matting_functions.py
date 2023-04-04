@@ -38,6 +38,22 @@ def show_im(img):
 
 @jit(nopython=True, cache=True)
 def get_window(image, x_center, y_center, window_size):
+    """
+    Extracts a window of a specified size centered at a given pixel location (x_center, y_center) from an image.
+    If the window goes beyond the boundary of the image, it is padded with zeros.
+
+    Args:
+        image (numpy.ndarray): A three-dimensional NumPy array representing an image, with dimensions 
+                               (height, width, channels).
+        x_center (int): An integer specifying the x-coordinate of the center pixel of the window.
+        y_center (int): An integer specifying the y-coordinate of the center pixel of the window.
+        window_size (int): An integer specifying the size of the window to extract.
+
+    Returns:
+        numpy.ndarray: A three-dimensional NumPy array representing the extracted window, with dimensions 
+                       (window_size, window_size, channels). If the window goes beyond the boundary of 
+                       the image, it is padded with zeros.
+    """
     height, width, channels = image.shape
     half_window_size = window_size // 2
     window = np.zeros((window_size, window_size, channels))
@@ -61,13 +77,22 @@ def get_window(image, x_center, y_center, window_size):
 @jit(nopython=True, cache=True)
 def solve(mu_F, Sigma_F, mu_B, Sigma_B, C, Sigma_C, alpha_init, maxIter = 50, minLike = 1e-6):
     """
-    mu_F - Mean of foreground pixel
-    Sigma_F - Covariance Mat of foreground pixel
-    mu_B, Sigma_B - Mean and Covariance of background pixel
-    C, Sigma_C - Current pixel, and its variance
-    alpha_init - starting alpha value
-    maxIter - Iterations to solve the value of the pixel
-    minLike - min likelihood to reach to stop before maxIterations. 
+    Args:
+
+    mu_F: Mean of foreground pixel
+    Sigma_F: Covariance matrix of foreground pixel
+    mu_B: Mean of background pixel
+    Sigma_B: Covariance matrix of background pixel
+    C: Current pixel value
+    Sigma_C: Variance of current pixel value
+    alpha_init: Starting alpha value
+    maxIter: Maximum number of iterations to solve the value of the pixel (default value: 50)
+    minLike: Minimum likelihood to reach to stop before maxIterations (default value: 1e-6)
+    Returns:
+
+    fg_best: Foreground pixel values
+    bg_best: Background pixel values
+    a_best: Alpha value
     """
 
     # Initializing Matrices

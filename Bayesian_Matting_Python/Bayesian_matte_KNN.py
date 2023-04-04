@@ -6,7 +6,7 @@ from matting_functions import solve
 from cluster_KNN import knn_cluster
 
 
-def Bayesian_Matte_KNN(img, trimap, N=25, sig=8, minNeighbours=10):
+def Bayesian_Matte_KNN(img, trimap, N, sig=8, minNeighbours=10):
     '''
     img - input image that the user will give to perform the foreground-background mapping
     trimap - the alpha mapping that is given with foreground and background determined.
