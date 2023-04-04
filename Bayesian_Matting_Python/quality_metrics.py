@@ -5,7 +5,7 @@ def quality_metrics(image, image_reference):
 
     mse = np.sum(np.square(image - image_reference))/np.size(image)
     
-    sad = np.sum(np.abs(image/255 - image_reference/255))
+    sad = np.sum(np.abs(image - image_reference))
     
     psnr = 20 * np.log10( 255 / np.sqrt(mse))
 
