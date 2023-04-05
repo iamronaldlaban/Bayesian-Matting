@@ -20,7 +20,7 @@ from matting_functions import matlab_style_gauss2d
 # image_trimap = filedialog.askopenfilename()
 
 # Read the image, trimap and ground truth
-filename = 'GT01'
+filename = 'GT04'
 image = np.array(Image.open(f'input_training_lowres\{filename}.png'))
 image_trimap = np.array(ImageOps.grayscale(Image.open(f'trimap_training_lowres\Trimap1\{filename}.png')))
 ground_truth = np.array(ImageOps.grayscale(Image.open(f'gt_training_lowres/{filename}.png')))

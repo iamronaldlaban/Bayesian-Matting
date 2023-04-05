@@ -1,12 +1,10 @@
 # Bayesian Approach to Digital Matting
 
 ## High-level Description of the project
-The task at hand involves the utilization of MATLAB and Python implementations to carry out Bayesian Matting [1]. It is one of the components of the 5C22 Computational Method at Trinity College, Dublin.
-
+The task at hand involves the utilization of MATLAB and Python implementations to carry out Bayesian Matting [1]. 
 **Bayesian matting** : 
 Bayesian matting involves loading an input image and its corresponding trimap. The image is partitioned into foreground, background and unknown regions based on pixel opacity values.  We create a window on the boundary of the unknown masks and the weights of the solved foreground and background windows. Also, we generate windows for the same regions in both foreground and background. We can calculate the mean color and covariance matrix for foreground and background if we have enough numbers of them. The 3-equation, 7-variable system is solved to find the maximum likelihhod. updating alpha, foreground and background values. The process is repeated with increasing window size until all pixels are considered.
 
-[1] Chuang, Y.Y., Curless, B., Salesin, D.H. and Szeliski, R., 2001, December. A bayesian approach to digital matting. In Proceedings of the 2001 IEEE Computer Society Conference on Computer Vision and Pattern Recognition. CVPR 2001 (Vol. 2, pp. II-II). IEEE.
 
 ---
 
@@ -102,11 +100,8 @@ Results for Test images
 ---
 ## Credits
 
-This code was developed for purely academic purposes by XXXX (add github profile name) as part of the module ..... 
+[1] Chuang, Y.Y., Curless, B., Salesin, D.H. and Szeliski, R., 2001, December. A bayesian approach to digital matting. In Proceedings of the 2001 IEEE Computer Society Conference on Computer Vision and Pattern Recognition. CVPR 2001 (Vol. 2, pp. II-II). IEEE.
 
-Resources:
-- XXXX
-- XXX
 
 
 
