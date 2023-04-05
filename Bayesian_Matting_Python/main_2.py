@@ -20,9 +20,9 @@ from matting_functions import matlab_style_gauss2d
 # image_trimap = filedialog.askopenfilename()
 
 # Read the image, trimap and ground truth
-filename = 'GT10'
+filename = 'GT01'
 image = np.array(Image.open(f'input_training_lowres\{filename}.png'))
-image_trimap = np.array(ImageOps.grayscale(Image.open(f'trimap_training_lowres\Trimap2\{filename}.png')))
+image_trimap = np.array(ImageOps.grayscale(Image.open(f'trimap_training_lowres\Trimap1\{filename}.png')))
 ground_truth = np.array(ImageOps.grayscale(Image.open(f'gt_training_lowres/{filename}.png')))
 # Window Size
 N = 105
@@ -33,13 +33,16 @@ start = timer() # Start the timer
 alpha_OB= Bayesian_Matte(image, image_trimap, N)
 end = timer() # End the timer
 alpha_OB = alpha_OB*255 # Convert to 8-bit image
-
+# Create a Pillow image from the NumPy array
+img = Image.fromarray(alpha_OB.astype('uint8'))
+# Save the image as a PNG file
+img.save('alpha.png')
 # Calculate the quality metrics
 quality_metrics(alpha_OB, ground_truth)
 print('Time taken: ', datetime.timedelta(seconds = end - start))
 
 # Read the background image
-background = cv2.imread('C:/Users/labanr/Desktop/Matting/Bayesian-Matting/Bayesian_Matting_Python/background.jpg')
+background = cv2.imread('background.jpg')
 background2 = cv2.cvtColor(background, cv2.COLOR_BGR2RGB)
 
 # Compositing
