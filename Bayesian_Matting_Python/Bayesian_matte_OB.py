@@ -3,7 +3,7 @@ from matting_functions import matlab_style_gauss2d
 from matting_functions import get_window
 from orchard_bouman_clust import clustFunc 
 from matting_functions import solve
-from cluster_KNN import knn_cluster
+
 
 def Bayesian_Matte(image, trimap, N=105, sig=8, minNeighbours=10):
     '''

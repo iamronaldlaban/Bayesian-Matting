@@ -1,68 +1,8 @@
-import numpy as np
-from PIL import Image, ImageOps
-import matplotlib.pyplot as plt
-import cv2
-from matting_functions import compositing
-from Bayesian_matte_OB import Bayesian_Matte
-from quality_metrics import quality_metrics
-from timeit import default_timer as timer
-import datetime
-import unittest
+
+
 from orchard_bouman_clust import calc_mean, calc_total_weight
 from matting_functions import matlab_style_gauss2d
 
-
-
-# root = tk.Tk()
-# root.withdraw() # Hide the main window
-
-# image = filedialog.askopenfilename()
-# image_trimap = filedialog.askopenfilename()
-
-# Read the image, trimap and ground truth
-filename = 'GT10'
-image = np.array(Image.open(f'input_training_lowres\{filename}.png'))
-image_trimap = np.array(ImageOps.grayscale(Image.open(f'trimap_training_lowres\Trimap2\{filename}.png')))
-ground_truth = np.array(ImageOps.grayscale(Image.open(f'gt_training_lowres/{filename}.png')))
-# Window Size
-N = 105
-
-start = timer() # Start the timer
-
-# Run the Bayesian Matting algorithm
-alpha_OB= Bayesian_Matte(image, image_trimap, N)
-end = timer() # End the timer
-alpha_OB = alpha_OB*255 # Convert to 8-bit image
-
-# Calculate the quality metrics
-quality_metrics(alpha_OB, ground_truth)
-print('Time taken: ', datetime.timedelta(seconds = end - start))
-
-# Read the background image
-background = cv2.imread('C:/Users/labanr/Desktop/Matting/Bayesian-Matting/Bayesian_Matting_Python/background.jpg')
-background2 = cv2.cvtColor(background, cv2.COLOR_BGR2RGB)
-
-# Compositing
-comp_OB = compositing(image, alpha_OB, background2)
-
-# Create a subplot of input image, trimap, alpha matte, and composite image
-fig, ax = plt.subplots(1, 4, figsize=(20,5))
-ax[0].imshow(image)
-ax[0].set_title('Input Image')
-ax[0].axis('off')
-ax[1].imshow(image_trimap, cmap='gray')
-ax[1].set_title('Trimap')
-ax[1].axis('off')
-ax[2].imshow(alpha_OB, cmap='gray')
-ax[2].set_title('Alpha Matte')
-ax[2].axis('off')
-ax[3].imshow(comp_OB)
-ax[3].set_title('Composite Image')
-ax[3].axis('off')
-
-plt.show()
-
-# unit test
 
 class TestBayesianMatte(unittest.TestCase):
     def test_image_and_alpha_size(self):
@@ -134,14 +74,4 @@ class TestBayesianMatte(unittest.TestCase):
         flipped_filter = np.flip(filter)
         self.assertTrue(np.allclose(filter, flipped_filter))
 
-   
-if __name__ == '__main__':
-    unittest.main()
-
-
-# image_alpha = np.array(ImageOps.grayscale(Image.open('C:/Users/labanr/Desktop/Matting/Bayesian-Matting/Bayesian_Matting_Python/gt_training_lowres/GT10.png')))
-# write_path = 'C:/Users/labanr/Desktop/Matting/Bayesian-Matting/Bayesian_Matting_Python/alpha.png'
-# cv2.imwrite(write_path, alpha_OB)
-#image = np.array(Image.open('High_Resolution/input_training_highres/GT04.png'))
-#image_trimap = np.array(ImageOps.grayscale(Image.open('High_Resolution/trimap_training_highres/Trimap1/GT04.png')))
-# image_alpha = np.array(ImageOps.grayscale(Image.open('High_Resolution/gt_training_highres/GT04.png')))
+        

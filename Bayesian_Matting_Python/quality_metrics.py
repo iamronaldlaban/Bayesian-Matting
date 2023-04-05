@@ -1,5 +1,5 @@
 import numpy as np
-from skimage.io import imread
+from skimage.metrics import structural_similarity as SSIM
 
 def quality_metrics(image, image_reference):
 
@@ -9,15 +9,16 @@ def quality_metrics(image, image_reference):
     
     psnr = 20 * np.log10( 255 / np.sqrt(mse))
 
+    ssim = SSIM(image, image_reference, data_range=1)
+
     print("MSE is ",mse)
     print("SAD is ",sad)
     print("PSNR is ",psnr)
+    print("SSIM is ", ssim)
 
 
 
-# image = imread('alpha.png')
-# image_reference = imread('gt_training_lowres\GT04.png')[:,:,1]
-# quality_metrics(image, image_reference)
+
 
 
 

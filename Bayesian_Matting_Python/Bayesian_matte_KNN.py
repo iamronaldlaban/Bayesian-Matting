@@ -3,7 +3,10 @@ from matting_functions import matlab_style_gauss2d
 from matting_functions import get_window
 from orchard_bouman_clust import clustFunc 
 from matting_functions import solve
-from cluster_KNN import knn_cluster
+from cluster_KNN import calcMean
+from cluster_KNN import calcCovariance
+from cluster_KNN import reshapeWeights
+from cluster_KNN import reshapePixels
 
 
 def Bayesian_Matte_KNN(img, trimap, N, sig=8, minNeighbours=10):
@@ -81,20 +84,31 @@ def Bayesian_Matte_KNN(img, trimap, N, sig=8, minNeighbours=10):
                 fg_pixels = np.reshape(fg_window, (-1, 3))[values_to_keep, :]
                 fg_weights = fg_weights[values_to_keep]
 
+                fg_weights = reshapeWeights(fg_weights, fg_pixels)
+                
+                fg_pixels = reshapePixels(fg_pixels, fg_pixels)
+                
                 # Creating a window and weights of solved background window
                 bg_window = get_window(bg_actual, x, y, N)
                 bg_weights = np.reshape((1-a_window)**2 * gaussian_weights, -1)
-                values_to_keep = np.nan_to_num(bg_weights) > 0
-                bg_pixels = np.reshape(bg_window, (-1, 3))[values_to_keep, :]
-                bg_weights = bg_weights[values_to_keep]
+                # values_to_keep = np.nan_to_num(bg_weights) > 0
+                # bg_pixels = np.reshape(bg_window, (-1, 3))[values_to_keep, :]
+                # bg_weights = bg_weights[values_to_keep]
+
+                bg_weights = reshapeWeights(bg_weights, bg_pixels)
+
+                bg_pixels = reshapePixels(bg_pixels, bg_pixels)
+
 
                 # We come back to this pixel later if it doesnt has enough solved pixels around it.
                 if len(bg_weights) < minNeighbours or len(fg_weights) < minNeighbours:
                     continue
 
                 # If enough pixels, we cluster these pixels to get clustered colour centers and their covariance    matrices
-                mean_fg, cov_fg = knn_cluster(fg_pixels, fg_weights)
-                mean_bg, cov_bg = knn_cluster(bg_pixels, bg_weights)
+                mean_fg = calcMean(fg_pixels, fg_weights)
+                cov_fg = calcCovariance(fg_pixels, fg_weights)                    
+                mean_bg = calcMean(bg_pixels, bg_weights)
+                cov_bg = calcCovariance(bg_pixels, bg_weights)
                 alpha_init = np.nanmean(a_window.ravel())
 
                 # We try to solve our 3 equation 7 variable problem with minimum likelihood estimation
