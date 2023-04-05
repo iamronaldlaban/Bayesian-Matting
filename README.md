@@ -40,7 +40,7 @@ skimage==0.0
 
 **Results**
 
-<img src="LR.png" width="850">
+<img src="LR.PNG" width="850">
 
 The table presents quantitative metrics for low-resolution images with two different trimaps, Trimaps 1 and 2. The metrics used to evaluate the quality of the results are mean squared error (MSE), sum of absolute differences (SAD), peak signal-to-noise ratio (PSNR), structural similarity index (SSIM), and time taken to produce the results.
 
@@ -50,7 +50,7 @@ When comparing the performance of the algorithm for different ground truth image
 
 Overall, the results suggest that the algorithm performs better for natural scenes with a simple background and the use of Trimap 1 results in better performance but at a higher computational cost.
 
-<img src="HR.png" width="550">
+<img src="HR.PNG" width="550">
 
 For high-resolution images, the results are shown only for Trimaps 1. It can be seen that the MSE and SAD values for all the high-resolution images are significantly higher than those for low-resolution images, indicating that processing high-resolution images is more challenging. The time taken for processing high-resolution images is also much higher than that for low-resolution images.
 
