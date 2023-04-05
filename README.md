@@ -3,6 +3,9 @@
 ## High-level Description of the project
 The task at hand involves the utilization of MATLAB and Python implementations to carry out Bayesian Matting [1]. It is one of the components of the 5C22 Computational Method at Trinity College, Dublin.
 
+**Bayesian matting** : 
+Bayesian matting involves loading an input image and its corresponding trimap. The image is partitioned into foreground, background and unknown regions based on pixel opacity values.  We create a window on the boundary of the unknown masks and the weights of the solved foreground and background windows. Also, we generate windows for the same regions in both foreground and background. We can calculate the mean color and covariance matrix for foreground and background if we have enough numbers of them. The 3-equation, 7-variable system is solved to find the maximum likelihhod. updating alpha, foreground and background values. The process is repeated with increasing window size until all pixels are considered.
+
 [1] Chuang, Y.Y., Curless, B., Salesin, D.H. and Szeliski, R., 2001, December. A bayesian approach to digital matting. In Proceedings of the 2001 IEEE Computer Society Conference on Computer Vision and Pattern Recognition. CVPR 2001 (Vol. 2, pp. II-II). IEEE.
 
 ---
@@ -35,8 +38,7 @@ skimage==0.0
     *  Generates a window with the unknow pixel as the center
     *  Iteratively solves to obtain alpha matte based on likelihood.
     *  Composites the image 
-4.  unit_test. py : Performs the unit test
-5.  quality_metrics.py : Measures the MSE, SAD, PSNR and Time elapsed.
+ 4.  quality_metrics.py : Measures the MSE, SAD, PSNR and Time elapsed.
 
 **Results**
 
@@ -56,6 +58,31 @@ For high-resolution images, the results are shown only for Trimaps 1. It can be 
 
 Overall, the results suggest that the performance of the image processing techniques is highly dependent on the resolution and complexity of the images.
 
+Following are some of the output obtain.(Images are taken from alphamatting.com)
+
+<img src="P1.PNG" width="850">
+
+<img src="P2.PNG" width="850">
+
+<img src="P3.PNG" width="850">
+
+Result obtain when salt and pepper noise is added to the image.
+
+<img src="N1.PNG" width="850">
+
+Results for Test images
+
+* Low Transparent Image
+
+<img src="T1.PNG" width="850">
+
+* Strongly Transparent Image
+
+<img src="T2.PNG" width="850">
+
+* High Transparent Image
+
+<img src="T3.PNG" width="850">
 
 **Unit Test**
 
