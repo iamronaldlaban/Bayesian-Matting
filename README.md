@@ -61,9 +61,7 @@ We observe that we will get better matting results with much more refined trimap
 <img src="R12.png" width="550">
 
 * Gradient error:
-Gradient errors are due to oversmoothing or erroneous discontinuities in the alpha matte (i.e. the gradient in the alpha matte diverges from the ground truth). Higher gradient error indicates that there is oversmoothening of the edges in the alpha matte when compared to the ground truth. Therefore the lesser the gradient error the better the quality of alpha matte.[2]
-
-The difference between the gradients of the computed alpha matte α and its ground truth α∗ is defined as the absolute difference between the normalized gradients of the alpha mattes at pixel i that we
+Gradient errors are due to oversmoothing or erroneous discontinuities in the alpha matte (i.e. the gradient in the alpha matte diverges from the ground truth). Higher gradient error indicates that there is oversmoothening of the edges in the alpha matte when compared to the ground truth. Therefore the lesser the gradient error the better the quality of alpha matte.[2]. The difference between the gradients of the computed alpha matte α and its ground truth α∗ is defined as the absolute difference between the normalized gradients of the alpha mattes at pixel i that we
 computed by convolving the mattes with first-order Gaussian derivative filters with variance σ. For these values we have taken the value of variance to be 0.5.
 
 <img src="ge.PNG" width="450">
