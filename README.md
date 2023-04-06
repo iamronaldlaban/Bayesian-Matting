@@ -10,9 +10,9 @@ Bayesian matting involves loading an input image and its corresponding trimap. T
 
 ## Installation and Execution
 
-1. For MATLAB no extra library functions are needed to be installed. 
+1. For MATLAB implementation no additional library functions are necessary to be installed 
 
-2. For Python the following modules should be installed. 
+2. For Python implementation the following modules should be installed. 
 ```sh                                 
 matplotlib==3.7.1
 numba==0.56.4
@@ -26,7 +26,7 @@ skimage==0.0
 
 ## Methodology and Results
 ### MATLAB
- For MATLAB just excute demo.m file and provide the necessary path for the images.
+ For MATLAB just execute demo.m file and provide the necessary path for the images.
 
  ### Python
  1. main_2. py : Reads the input image, trimap and the ground truth image. Calculates the alpha matte by call Bayesian_matte_OB and measure the quality metric by calling quality_metric.py. Also calls the compositing.py function to obtain the composite image.
