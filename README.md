@@ -10,9 +10,9 @@ Bayesian matting involves loading an input image and its corresponding trimap. T
 
 ## Installation and Execution
 
-1. For MATLAB no extra library functions are needed to install. 
+1. For MATLAB no extra library functions are needed to be installed. 
 
-2. For Python the following files are needed to be installed. 
+2. For Python the following modules should be installed. 
 ```sh                                 
 matplotlib==3.7.1
 numba==0.56.4
