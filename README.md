@@ -10,7 +10,7 @@ Bayesian matting involves loading an input image and its corresponding trimap. T
 
 ## Installation and Execution
 
-1. For MATLAB implementation no additional library functions are necessary to be installed 
+1. For MATLAB implementation no additional library functions are necessary to be installed. 
 
 2. For Python implementation the following modules should be installed. 
 ```sh                                 
@@ -36,7 +36,7 @@ skimage==0.0
     *  Generates a window with the unknow pixel as the center
     *  Iteratively solves to obtain alpha matte based on likelihood.
     *  Composites the image 
- 4.  quality_metrics.py : Measures the MSE, SAD, PSNR and Time elapsed.
+ 4.  quality_metrics.py : Measures the MSE, SAD, PSNR, SSIM and Time elapsed.
 
 **Results**
 
