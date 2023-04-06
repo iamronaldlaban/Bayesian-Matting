@@ -61,6 +61,11 @@ We observe that we will get better matting results with much more refined trimap
 <img src="R12.png" width="550">
 
 * Gradient error:
+Gradient errors are due to oversmoothing or erroneous discontinuities in the alpha matte (i.e. the gradient in the alpha matte diverges from the ground truth). Higher gradient error indicates that there is oversmoothening of the edges in the alpha matte when compared to the ground truth. Therefore the lesser the gradient error the better the quality of alpha matte.[2]
+
+The difference between the gradients of the computed alpha matte α and its ground truth α∗ is defined as the absolute difference between the normalized gradients of the alpha mattes at pixel i that we
+computed by convolving the mattes with first-order Gaussian derivative filters with variance σ. For these values we have taken the value of variance to be 0.5.
+
 <img src="ge.PNG" width="450">
 
 Following are some of the output obtain.(Images are taken from alphamatting.com)
@@ -108,7 +113,7 @@ Results for Test images
 ## Credits
 
 [1] Chuang, Y.Y., Curless, B., Salesin, D.H. and Szeliski, R., 2001, December. A bayesian approach to digital matting. In Proceedings of the 2001 IEEE Computer Society Conference on Computer Vision and Pattern Recognition. CVPR 2001 (Vol. 2, pp. II-II). IEEE.
-
+[2] C. Rhemann, C. Rother, J. Wang, M. Gelautz, P. Kohli, P. Rott: "A Perceptually Motivated Online Benchmark for Image Matting"; Poster: IEEE Conference on Computer Vision and Pattern Recognition, 2009. CVPR '09, Miami, Florida, USA; 06-20-2009 - 06-25-2009; in: "Proceddings of the IEEE Conference on Computer Vision and Pattern Recognition", (2009), 8 pages.
 
 
 
