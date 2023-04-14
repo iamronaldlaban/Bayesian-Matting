@@ -95,9 +95,9 @@ Results for Test images
 **Silcing :**
 ```Four_section.py``` provides an analysis of tiled images in four sections. It has been observed that this method takes half the time compared to not slicing the image, but the PSNR drops by approximately 3dB in this case
 
-   <img src="Low_Resolution_GT02.PNG" width="850">
+   <img src="Low_Resolution_GT02.png" width="850">
 
-   <img src="High_Resolution_GT02.PNG" width="850">
+   <img src="High_Resolution_GT02.png" width="850">
 
 **Unit Test**
 
