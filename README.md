@@ -29,14 +29,14 @@ skimage==0.0
  For MATLAB just excute demo.m file and provide the necessary path for the images.
 
  ### Python
- 1. main_2. py : Reads the input image, trimap and the ground truth image. Calculates the alpha matte by call Bayesian_matte_OB and measure the quality metric by calling quality_metric.py. Also calls the compositing.py function to obtain the composite image.
- 2. Bayesian_matte_OB : Calculate the alpha matte using maximun likelihood. To determine wheather the unknow region in the trimap is foreground or background.
- 3. matting_functions.py : 
+ 1. ```main_2. py``` : Reads the input image, trimap and the ground truth image. Calculates the alpha matte by call Bayesian_matte_OB and measure the quality metric by calling quality_metric.py. Also calls the compositing.py function to obtain the composite image.
+ 2. ```Bayesian_matte_OB.py``` : Calculate the alpha matte using maximun likelihood. To determine wheather the unknow region in the trimap is foreground or background.
+ 3. ```matting_functions.py``` : 
     *  Calculates the Gaussian weights for the window
     *  Generates a window with the unknow pixel as the center
     *  Iteratively solves to obtain alpha matte based on likelihood.
     *  Composites the image 
- 4.  quality_metrics.py : Measures the MSE, SAD, PSNR and Time elapsed.
+ 4.  ```quality_metrics.py``` : Measures the MSE, SAD, PSNR and Time elapsed.
 
 **Results**
 
@@ -91,6 +91,13 @@ Results for Test images
 * High Transparent Image
 
 <img src="T3.PNG" width="850">
+
+**Silcing :**
+```Four_section.py``` provides an analysis of tiled images in four sections. It has been observed that this method takes half the time compared to not slicing the image, but the PSNR drops by approximately 3dB in this case
+
+   <img src="Low_Resolution_GT02.PNG" width="850">
+
+   <img src="High_Resolution_GT02.PNG" width="850">
 
 **Unit Test**
 
